@@ -1,0 +1,440 @@
+body {
+	background: #000;
+	color: #fff;
+	font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", "Lucida Sans", Tahoma, sans-serif; 
+	margin: 0px;
+	width: 720px;
+	overflow: hidden;
+}
+
+#container {
+	width: 720px;
+	height: 720px;
+	margin: 0px auto;
+	position: relative;
+}
+
+h1 {
+	font-family: 'Gill Sans','Gill Sans MT',Calibri,'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Tahoma,sans-serif;
+	font-size: 18px;
+	margin-top: 0px;
+	margin-bottom: 10px;
+	color: #8D9194;
+	font-weight: normal;
+	text-transform: uppercase;
+}
+
+.playingArtwork.hidden {
+	opacity: 0;
+}
+
+.playingArtwork.shown {
+	opacity: .75;
+}
+
+.playingArtwork {
+	transition: opacity 1.7s ease-out;
+}
+
+.artwork {
+	background-position: bottom;
+	background-repeat: no-repeat;
+	background-size: 120%;
+	opacity: .75;
+	filter: blur(80px);
+	-webkit-filter: blur(80px);
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	position: relative;
+	z-index: -1;
+}
+
+.artwork_suggestion, .loadArtwork {
+	background-position: bottom;
+	background-repeat: no-repeat;
+	background-size: 120%;
+	opacity: .75;
+	filter: blur(80px);
+	-webkit-filter: blur(80px);
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+
+	/*
+	* Matches the .suggestion transition duration and timing.
+	* .5x the suggestion rotation duration since the background fades in/out rather than just one .7s animation
+	* */
+	transition: opacity .35s ease;
+}
+
+.loadArtwork {
+	transition: opacity .7s ease; /* matches the .suggestion durations */
+}
+
+.artwork_suggestion.hidden, .loadArtwork.hidden {
+	opacity: 0;
+}
+
+.artwork_hidden {
+	background-position: bottom;
+	background-repeat: no-repeat;
+	background-size: 120%;
+	position: absolute;
+	opacity: 0;
+	left: 0px;
+	filter: blur(80px);
+	-webkit-filter: blur(80px);
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+
+@-moz-keyframes spin { 
+    100% { -moz-transform: rotate(360deg); } 
+}
+@-webkit-keyframes spin { 
+    100% { -webkit-transform: rotate(360deg); } 
+}
+@keyframes spin { 
+    100% { 
+        -webkit-transform: rotate(360deg); 
+        transform:rotate(360deg); 
+    } 
+}
+
+.art_image {
+	width: 500px;
+	border-radius: 6px;
+	position: relative;
+	z-index: 2;
+	box-shadow: 0 0 20px 4px rgba(0, 0, 0, 0.7);
+}
+
+.album_art {
+	top: 2px;
+	transition: height .7s cubic-bezier(0.68, -0.55, 0.27, 1.55),
+				width .7s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.art_image_hidden {
+	width: 500px;
+	border-radius: 6px;
+	position: absolute;
+	opacity: 0;
+	left: 0px;
+	z-index: 3;
+	box-shadow: 0 0 20px 4px rgba(0, 0, 0, 0.7);
+	transition: height .7s cubic-bezier(0.68, -0.55, 0.27, 1.55),
+				width .7s cubic-bezier(0.68, -0.55, 0.27, 1.55),
+				opacity 1.7s ease-out;
+}
+
+.art_image_visible {
+	opacity: 1;
+}
+
+.placeholderImage {
+	-webkit-animation:spin 6s linear infinite;
+    -moz-animation:spin 6s linear infinite;
+    animation:spin 6s linear infinite;
+    box-shadow: none;
+}
+
+.album_art_expanded {
+	height: 720px;
+	width: 720px;
+}
+
+.text {
+	/*
+	 * Accounting for shortening the track, artist, album display
+	 * by 70px, reduce total width by 70px, add 35px to margin-left
+	 * but adding back an extra 20px, 10 each side, so that there is
+	 * some space for a fade in and out for text overflow. The track
+	 * artist and album displays are still 430px wide, but this is a
+	 * bit longer.
+	 * */
+	width: 450px;
+	margin-left: 135px;
+	margin-top: -105px;
+	position: absolute;
+	z-index:-1;
+	overflow: hidden;
+	mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+}
+
+#displayedInfo {
+	z-index: 0;
+	transition: margin-top .6s ease-out, opacity .6s ease;
+	text-shadow: -2px -2px 10px #000, 2px -2px 10px #000, -2px 2px 10px #000, 2px 2px 10px #000;
+
+	/* Manually setting height to give a little extra space so the text shadow isn't cut off */
+    height: 110px;
+}
+
+#displayedInfo.hidden {
+	margin-top: -60px;
+	opacity: 0;
+}
+
+#displayedInfo.hideForExpansion {
+	opacity: 0;
+	transition: opacity .8s ease;
+}
+
+.text.suggestionInfo {
+	margin-top: -155px;
+}
+
+.text.playingInfo {
+	margin-top: -103px;
+}
+
+.displayNone {
+	display: none;
+}
+
+.noClick {
+	pointer-events:none;
+}
+
+#main {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 1;
+	transition: top 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 1.2s ease;
+}
+
+#main.hidden {
+	top: 65%;
+	opacity: 0;
+}
+
+#albumSuggestions {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: inherit;
+    height: inherit;
+    transition: top 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 1.2s ease;
+}
+
+#albumSuggestions.hidden {
+	top: 65%;
+	opacity: 0;
+}
+
+.suggestion {
+    border-radius: 6px;
+    position: absolute;
+    box-shadow: 0 0 20px 4px rgba(0, 0, 0, 0.7);
+
+    /*
+	* height, width, top, left are for rotation, opacity and margin-top for fade in/out on start and mode switch
+    * */
+    transition: height .7s ease, width .7s ease, top .7s ease, left .7s ease, opacity .7s ease, margin-top .7s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.backSuggestion {
+	left: 38.5%;
+    top: 4.5%;
+    width: 150px;
+    height: 150px;
+    z-index: 0;
+}
+
+.backLeftSuggestion {
+	width: 175px;
+    height: 175px;
+    z-index: 2;
+    left: 18%;
+    top: 8%;
+    z-index: 1;
+}
+
+.leftSuggestion {
+	width: 250px;
+    height: 250px;
+    z-index: 2;
+    left: 1%;
+    top: 20%;
+}
+
+.centerSuggestion {
+    width: 350px;
+    height: 350px;
+    z-index: 5;
+    top: 25%;
+    left: 25%;
+}
+
+.rightSuggestion {
+	width: 250px;
+    height: 250px;
+    z-index: 4;
+    left: 64%;
+    top: 20%;
+}
+
+.backRightSuggestion {
+	width: 175px;
+    height: 175px;
+    z-index: 2;
+    left: 56%;
+    top: 8%;
+    z-index: 3;
+}
+
+.hiddenSuggestion {
+	opacity: 0;
+	margin-top: 5%;
+}
+
+.track, .dummyTrack {
+	font-weight: bold;
+	font-size: 32px;
+	margin-top: 4px;
+	margin-bottom: 0px;
+	white-space: nowrap;
+	text-align: center;
+}
+
+.artist, .dummyArtist {
+	font-size: 28px;
+	margin-bottom: 4px;
+	color: #F4F4F4;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.album, .dummyAlbum {
+	font-size: 20px;
+	color: #8D9194;
+	font-weight: 100;
+	text-align: center;
+	font-style: italic;
+	white-space: nowrap;
+}
+
+.track, .artist, .album {
+	position: relative;
+	
+	/*
+	 * To fit in the middle of .text div, margin-left of 10px
+	 * so these are in the middle of that div with 10px on
+	 * each side.
+	 * */
+	width: 430px;
+	margin-left: 10px;
+}
+
+.dummyTrack, .dummyArtist, .dummyAlbum {
+	opacity: 0;
+}
+
+.hoverContainer {
+	position: absolute;
+    width: 100px;
+    height: 60px;
+    z-index: 1;
+    left: 85%;
+}
+
+.connectionInfoContainer {
+	position: absolute;
+	text-align: right;
+    margin-top: -23px;
+    right: 0px;
+}
+
+.connectionInfoContainer.connected {
+	right: -40px;
+    transition: opacity .8s ease, right 2s cubic-bezier(0.51, -0.58, 0, 1.34) 2s;
+}
+
+.connectionIcon {
+	transition: opacity .8s ease .3s;
+}
+
+#connectingIcon {
+	position: absolute;
+	right: 8px;
+}
+
+#connectedIcon {
+	color: #4aa58a;
+	position: absolute;
+	right: 8px;
+}
+
+#connectingIcon.hidden {
+	opacity: 0;
+}
+
+#connectedIcon.hidden {
+	opacity: 0;
+}
+
+.noTransition {
+	transition: none;
+}
+
+.hoverContent {
+    position: relative;
+    background-color: #a194946e;
+    border-radius: 10px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-color: #ffffff6e;
+    border-style: solid;
+    border-bottom-left-radius: 45px;
+    width: 100px;
+    height: 65px;
+    top: -71px;
+    margin-top: 0px;
+    z-index: 1;
+    transition: top .35s ease;
+    text-align: center;
+}
+
+.hoverContent.shown {
+	top: -5px;
+}
+
+.customArtIcon {
+	top: 12%;
+	left: 5%;
+	position: relative;
+	font-size: 3em;
+}
+
+.customArtIcon.useCustom {
+	color: #919191;
+}
+
+.artIconStack {
+    top: 5%;
+    left: 25%;
+    position: relative;
+    height: inherit;
+}
+
+.artIconStackIcon {
+	line-height: normal;
+    width: auto;
+}
+
+.artIconStackIcon.fa-ban {
+	color: #ff6347b3;
+    font-size: 1.2em;
+}
+
+.visibilityHidden {
+	visibility: hidden;
+}

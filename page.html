@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+	<script src="jquery-3.7.1.js"></script>
+	<script src="suggestions.js"></script>
+	<script src="page.js"></script>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<title></title>
+		<link rel="stylesheet" href="fontawesome/css/fontawesome.css">
+		<link rel="stylesheet" href="fontawesome/css/solid.css">
+		<link rel="stylesheet" href="style.css">
+	</head>
+
+	<body onload="setUp();">
+		<div id="container">	
+			<div class="hoverContainer">
+				<div class="hoverContent">
+					<div class="artIconStack fa-stack fa-3x">
+						<i class="artIconStackIcon fa-solid fa-paintbrush fa-stack-1x"></i>
+						<i class="artIconStackIcon fa-solid fa-ban fa-stack-1x"></i>
+					</div>
+				</div>
+			</div>
+			<div id="playingBlur2" class="artwork_hidden playingArtwork"></div>
+			<div id="playingBlur1" class="artwork playingArtwork hidden"></div>
+			<section id="albumSuggestions">
+				<div id="loadArtwork1" class="loadArtwork hidden"></div>
+				<div id="loadArtwork2" class="loadArtwork hidden"></div>
+				<div class="artwork_suggestion hidden"></div>
+				<img id="suggestion1" class="suggestion leftSuggestion hiddenSuggestion"      width="500" height="500" src="">
+				<img id="suggestion2" class="suggestion centerSuggestion hiddenSuggestion"    width="500" height="500" src="">
+				<img id="suggestion3" class="suggestion rightSuggestion hiddenSuggestion"     width="500" height="500" src="">
+				<img id="suggestion4" class="suggestion backRightSuggestion hiddenSuggestion" width="500" height="500" src="">
+				<img id="suggestion5" class="suggestion backLeftSuggestion hiddenSuggestion"  width="500" height="500" src="">
+				<img id="suggestion6" class="suggestion backSuggestion hiddenSuggestion"      width="500" height="500" src="">
+			</section>
+			<section id="main" class="hidden displayNone">
+				<img class="album_art art_image" src="transparent1x1.png" width="500" height="500">
+				<img class="album_art art_image_hidden" width="500" height="500">
+			</section>
+			<div id="displayedInfo" class="text hidden">
+					<span class="trackFadeWrapper"><div class="track" maxRight="0">Track Name</div></span>
+					<span class="artistFadeWrapper"><div class="artist" maxRight="0">Artist</div></span>
+					<span class="albumFadeWrapper"><div class="album" maxRight="0">Album Name</div></span>
+			</div>
+			<div class="connectionInfoContainer">
+				<i id="connectingIcon" class="connectionIcon fa-solid fa-spinner fa-spin"></i>
+				<i id="connectedIcon" class="connectionIcon fa-solid fa-signal hidden"></i>
+			</div>
+		</div>
+	</body>
+	<span class="dummyTrack">Track Name</span>
+	<span class="dummyArtist">Artist</span>
+	<span class="dummyAlbum">Album Name</span>
+</html>
