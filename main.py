@@ -146,22 +146,24 @@ async def listenAudio():
             
             # Data the websocket clients will receive
             songData = {
-                "matched"      : False,
-                "song"         : None,
-                "artist"       : None,
-                "album"        : None,
-                "art"          : None,
-                "customArt"    : None,
-                "fullResponse" : songInfo
+                "matched"               : False,
+                "song"                  : None,
+                "artist"                : None,
+                "album"                 : None,
+                "art"                   : None,
+                "customArt"             : None,
+                "usingPlaceholderImage" : False,
+                "fullResponse"          : songInfo
             }
             
             if len(songInfo["matches"]) > 0:
-                songData["matched"] = True
-                song                = None
-                artist              = None
-                album               = None
-                art                 = None
-                customArt           = None
+                songData["matched"]   = True
+                song                  = None
+                artist                = None
+                album                 = None
+                art                   = None
+                customArt             = None
+                usingPlaceholderImage = False
                 
                 try:
                     song = songInfo["track"]["title"]
@@ -195,7 +197,8 @@ async def listenAudio():
 
                     except:
                         print("error falling back to and getting normal quality album art from shazam response")
-                        art = placeholderArt # If the song match has no art, default to placeholder
+                        art                   = placeholderArt # If the song match has no art, default to placeholder
+                        usingPlaceholderImage = True
                 
                 # Log each song + artist combination and album + artist combination
                 with playedTracksAlbumsLock:
@@ -233,20 +236,22 @@ async def listenAudio():
                     customArt = artHandler.getCustomArt(song + " + " + artist + ";")
                 
                 # Write to the object that gets sent to the websocket clients
-                songData["song"]      = song
-                songData["artist"]    = artist
-                songData["album"]     = album
-                songData["art"]       = art
-                songData["customArt"] = customArt
+                songData["song"]                  = song
+                songData["artist"]                = artist
+                songData["album"]                 = album
+                songData["art"]                   = art
+                songData["customArt"]             = customArt
+                songData["usingPlaceholderImage"] = usingPlaceholderImage
 
             else:
                 # This is the information that will be displayed when Shazam is unable to match a song
-                songData["matched"]   = False
-                songData["song"]      = "♫♫♫"
-                songData["artist"]    = ""
-                songData["album"]     = ""
-                songData["art"]       = placeholderArt
-                songData["customArt"] = placeholderArt
+                songData["matched"]               = False
+                songData["song"]                  = "♫♫♫"
+                songData["artist"]                = ""
+                songData["album"]                 = ""
+                songData["art"]                   = placeholderArt
+                songData["customArt"]             = placeholderArt
+                songData["usingPlaceholderImage"] = True
 
             # Close audio stream to be able to start listening again
             stream.stop_stream()

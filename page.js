@@ -49,12 +49,19 @@ var artistScrollTimeout    = null;
 var albumScrollTimeout     = null;
 var infoScrollTimeoutMs    = 2500; // 2.5s
 
+// Timeout for handling when to get new suggestions
+// after being idle on the now playing screen for
+// some amount of time.
+//
+var getNewSuggestionsTimeout   = null;
+var getNewSuggestionsTimeoutMs = 60*60*1000; // 1 hr
+
 // Seconds before the scrolling text transition starts
 //
 var infoScrollDelaySeconds = 3;
 
-// Base text scroll duration in seconds before applying the
-// growth factor
+// Base text scroll duration in seconds before applying
+// the growth factor.
 //
 var baseScrollDurationSeconds = 3.8;
 
@@ -71,20 +78,14 @@ var opacityTextNowPlayingDurationSeconds  = 0.85; // .5x the 1.7s album art opac
 // the recording length when accounting for the time it
 // takes to get a result from Shazam. With a recording
 // length of 15s, it seems to generally take 1.5s to get
-// a response from Shazam. Corresponds to rec_sec in
-// python that handles recording and identification.
+// a response from Shazam. Corresponds to recordingLengthSeconds
+// in python that handles recording and identification.
 //
 var recordingDurationSeconds = 15;
 
 // Can the swap from suggestions to now playing occur?
 //
 var ableToSwapToNowPlaying = false;
-
-// Placeholder art path, used for determining if
-// the certain classes need to be applied to the
-// album art image elements for animations.
-//
-var placeholderArt = "record.png";
 
 // Settings to tweak when to show the placeholder
 // record.png image. Changing failedMatchThreshold
@@ -127,6 +128,13 @@ function getMatchedPlaceholderTestData() {
 //
 function savePlayed() {
 	socket.send("save played");
+}
+
+// Clear the getNewSuggestionsTimeout timeout.
+//
+function clearGetNewSuggestionTimeout() {
+	clearTimeout(getNewSuggestionsTimeout);
+	getNewSuggestionsTimeout = null;
 }
 
 // Clear the returnToSuggestionsTimeout timeout.
@@ -263,10 +271,11 @@ function updatePlayingScreen(playingInfo) {
 	var playingBlur1Element   = $("#playingBlur1");
 	var playingBlur2Element   = $("#playingBlur2");
 
-	var trackName        = playingInfo["song"];
-	var artistName       = playingInfo["artist"];
-	var albumName        = playingInfo["album"];
-	var albumArt         = null;
+	var trackName             = playingInfo["song"];
+	var artistName            = playingInfo["artist"];
+	var albumName             = playingInfo["album"];
+	var usingPlaceholderImage = playingInfo["usingPlaceholderImage"]
+	var albumArt              = null;
 	
 	if (useCustomArt) {
 		albumArt = playingInfo["customArt"];
@@ -296,7 +305,7 @@ function updatePlayingScreen(playingInfo) {
 			// If the new art is the placeholder record image, apply the class
 			// that has the rotation animation to the image we're about to show
 			//
-			if (albumArt == placeholderArt) {
+			if (usingPlaceholderImage) {
 				artImageElement.addClass("placeholderImage");
 			}
 
@@ -323,7 +332,7 @@ function updatePlayingScreen(playingInfo) {
 			// 4. Fade out the top .album_art image. The bottom .album_art image remains
 			//    the visible one in the case where the placeholder art is used
 			//
-			if (albumArt == placeholderArt) {
+			if (usingPlaceholderImage) {
 
 				// 1.
 				//
@@ -865,40 +874,41 @@ function showSuggestions() {
 	//
 	$("title").text("Suggestions");
 
-	// Clear the timeout
+	// Clear the timeouts
 	//
 	clearRotateSuggestionTimeout();
+	clearGetNewSuggestionTimeout();
 
 	// Show each suggestion and fade in the blurred background
 	//
 	setTimeout(function() {
 		back.removeClass("hiddenSuggestion");
 		loadArtwork2.css("background-image", "url(" + back.attr("src") + ")").removeClass("hidden");
-	}, 0);
+	}, 500);
 
 	setTimeout(function() {
 		backLeft.removeClass("hiddenSuggestion");
 		loadArtwork1.css("background-image", "url(" + backLeft.attr("src") + ")").removeClass("hidden");
 		loadArtwork2.addClass("hidden");
-	}, 750);
+	}, 1250);
 
 	setTimeout(function() {
 		backRight.removeClass("hiddenSuggestion");
 		loadArtwork1.addClass("hidden");
 		loadArtwork2.css("background-image", "url(" + backRight.attr("src") + ")").removeClass("hidden");
-	}, 1500);
+	}, 2000);
 
 	setTimeout(function() {
 		left.removeClass("hiddenSuggestion");
 		loadArtwork1.css("background-image", "url(" + left.attr("src") + ")").removeClass("hidden");
 		loadArtwork2.addClass("hidden");
-	}, 2250);
+	}, 2750);
 
 	setTimeout(function() {
 		right.removeClass("hiddenSuggestion");
 		loadArtwork1.addClass("hidden");
 		loadArtwork2.css("background-image", "url(" + right.attr("src") + ")").removeClass("hidden");
-	}, 3000);
+	}, 3500);
 
 	setTimeout(function() {
 
@@ -922,12 +932,17 @@ function showSuggestions() {
 					shiftSuggestions();
 				});
 
-				// Kick off automatic rotation timer
+				// Kick off automatic rotation timeout
 				//
 				rotateSuggestionTimeout = setTimeout(function() {
 					shiftSuggestions();
 				}, rotateSuggestionTimeoutMs);
-				
+
+				// Kick off new suggestions timeout
+				//
+				getNewSuggestionsTimeout = setTimeout(function() {
+					getNewSuggestions();
+				}, getNewSuggestionsTimeoutMs);
 				
 				// Can swap now that suggestions are done displaying
 				//
@@ -953,7 +968,7 @@ function showSuggestions() {
 		// Fade in the blurred background that is used for suggestion rotation
 		//
 		$(".artwork_suggestion").removeClass("hidden");
-	}, 3750);
+	}, 4250);
 }
 
 // Begins the process of swapping from now playing
@@ -1053,26 +1068,10 @@ function showNowPlaying(eventData) {
 //
 function swapToNowPlaying(eventData) {
 
-	// Clear the auto rotate timeout
+	// Clear the timeouts
 	//
 	clearRotateSuggestionTimeout();
-
-	// Disable the events that cause rotations
-	//
-	$(".artwork_suggestion").off("transitionend");
-	$("#albumSuggestions").off("click");
-
-	// After the fade out transition, set up for next switch
-	//
-	$("#albumSuggestions").one("transitionend", function() {
-		$("#albumSuggestions").addClass("displayNone");
-		$(".artwork_suggestion").addClass("hidden");
-		$(".artwork_suggestion").css("background-image", "");
-	});
-
-	// Start fade out transition, disable click interactions
-	//
-	$("#albumSuggestions").addClass("noClick").addClass("hidden");
+	clearGetNewSuggestionTimeout();
 
 	// Once the text fades, begin showing the now playing screen
 	//
@@ -1083,11 +1082,9 @@ function swapToNowPlaying(eventData) {
 		showNowPlaying(eventData);
 	});
 
-	// Set to fade at about same time as suggestions container
+	// Hide suggestions and the display text
 	//
-	setTimeout(function() {
-		$("#displayedInfo").removeClass("suggestionInfo").addClass("hidden");
-	}, 400);
+	hideSuggestions();
 }
 
 // Helper for checking if swapping from suggestions
@@ -1316,4 +1313,61 @@ function setUpTransitions() {
 	setUpTextTransitions(".track",  ".dummyTrack",  ".trackFadeWrapper",  trackScrollTimeout);
 	setUpTextTransitions(".artist", ".dummyArtist", ".artistFadeWrapper", artistScrollTimeout);
 	setUpTextTransitions(".album",  ".dummyAlbum",  ".albumFadeWrapper",  albumScrollTimeout);
+}
+
+// Hide the suggestions and the display text
+//
+function hideSuggestions(eventData) {
+
+	// Disable the events that cause rotations
+	//
+	$(".artwork_suggestion").off("transitionend");
+	$("#albumSuggestions").off("click");
+
+	// After the fade out transition, set up for next switch
+	//
+	$("#albumSuggestions").one("transitionend", function() {
+		$("#albumSuggestions").addClass("displayNone");
+		$(".artwork_suggestion").addClass("hidden");
+		$(".artwork_suggestion").css("background-image", "");
+	});
+
+	// Start fade out transition, disable click interactions
+	//
+	$("#albumSuggestions").addClass("noClick").addClass("hidden");
+
+	// Set to fade at about same time as suggestions container
+	//
+	setTimeout(function() {
+		$("#displayedInfo").removeClass("suggestionInfo").addClass("hidden");
+	}, 400);
+}
+
+// Clears the currently displayed suggestions and displays
+// a new random set of suggestions
+//
+function getNewSuggestions() {
+	ableToSwapToNowPlaying = false;
+
+	// Clear the auto rotate timeout
+	//
+	clearRotateSuggestionTimeout();
+
+	// Hide what's currently displayed
+	//
+	hideSuggestions();
+
+	// Prepare elements so they are ready to reappear, then
+	// display the new suggestions
+	//
+	setTimeout(function() {
+		$(".track").text("");
+		$(".artist").text("");
+		$(".album").text("");
+
+		$("#albumSuggestions").removeClass("displayNone").removeClass("hidden").removeClass("noClick");
+		$(".suggestion").addClass("hiddenSuggestion");
+
+		showSuggestions();
+	}, 1500);
 }
