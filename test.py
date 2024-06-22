@@ -44,22 +44,27 @@ async def echo(websocket):
         global num
         
         songInfo = {
-            "song"    : titles[num % (len(titles))],
-            "artist"  : artists[num % (len(artists))],
-            "art"     : arts[num % (len(arts))],
-            "album"   : albums[num % (len(albums))],
-            "matched" : True
+            "matched"               : True,
+            "song"                  : titles[num % (len(titles))],
+            "artist"                : artists[num % (len(artists))],
+            "album"                 : albums[num % (len(albums))],
+            "art"                   : arts[num % (len(arts))],
+            "customArt"             : None,
+            "usingPlaceholderImage" : False,
+            "fullResponse"          : None
         }
 
         if message == "no match":
-            songInfo["matched"] = False
-            songInfo["art"]     = "record.png"
-            songInfo["song"]    = "♫♫♫"
-            songInfo["artist"]  = ""
-            songInfo["album"]   = ""
+            songInfo["matched"]               = False
+            songInfo["song"]                  = "♫♫♫"
+            songInfo["artist"]                = ""
+            songInfo["album"]                 = ""
+            songInfo["art"]                   = "record.png"
+            songInfo["usingPlaceholderImage"] = True
 
         if message == "record":
-            songInfo["art"] = "record.png"
+            songInfo["art"]                   = "record.png"
+            songInfo["usingPlaceholderImage"] = True
 
         num += 1
 
